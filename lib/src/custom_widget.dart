@@ -11,6 +11,9 @@ class BeforeAfter extends StatefulWidget {
   final double thumbRadius;
   final Color? overlayColor;
   final bool isVertical;
+  final double clipFactor;
+  final Function(double)? onChanged;
+  final double thumbWidth;
 
   const BeforeAfter({
     Key? key,
@@ -20,9 +23,12 @@ class BeforeAfter extends StatefulWidget {
     this.imageWidth,
     this.imageCornerRadius = 8.0,
     this.thumbColor = Colors.white,
-    this.thumbRadius = 16.0,
+    this.thumbRadius = 8.0,
     this.overlayColor,
     this.isVertical = false,
+    this.clipFactor = 0.5,
+    this.onChanged,
+    this.thumbWidth = 2.0,
   }) : super(key: key);
 
   @override
@@ -30,65 +36,82 @@ class BeforeAfter extends StatefulWidget {
 }
 
 class _BeforeAfterState extends State<BeforeAfter> {
-  double _clipFactor = 0.5;
+  double _clipFactor = 0.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _clipFactor = widget.clipFactor;
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: <Widget>[
-        Padding(
-          padding: widget.isVertical
-              ? const EdgeInsets.symmetric(vertical: 24.0)
-              : const EdgeInsets.symmetric(horizontal: 24.0),
-          child: SizedImage(
-            widget.afterImage,
-            widget.imageHeight,
-            widget.imageWidth,
-            widget.imageCornerRadius,
-          ),
-        ),
-        Padding(
-          padding: widget.isVertical
-              ? const EdgeInsets.symmetric(vertical: 24.0)
-              : const EdgeInsets.symmetric(horizontal: 24.0),
-          child: ClipPath(
-            clipper: widget.isVertical
-                ? RectClipperVertical(_clipFactor)
-                : RectClipper(_clipFactor),
+    return Container(
+      decoration: BoxDecoration(border: Border.all(color: Colors.red)),
+      child: Stack(
+        alignment: Alignment.center,
+        children: <Widget>[
+          Padding(
+            padding: widget.isVertical
+                ? const EdgeInsets.symmetric(vertical: 24.0)
+                : const EdgeInsets.symmetric(horizontal: 24.0),
             child: SizedImage(
-              widget.beforeImage,
+              widget.afterImage,
               widget.imageHeight,
               widget.imageWidth,
               widget.imageCornerRadius,
             ),
           ),
-        ),
-        Positioned.fill(
-          child: SliderTheme(
-            data: SliderThemeData(
-              trackHeight: 0.0,
-              overlayColor: widget.overlayColor,
-              thumbShape:
-                  CustomThumbShape(widget.thumbRadius, widget.thumbColor),
+          Padding(
+            padding: widget.isVertical
+                ? const EdgeInsets.symmetric(vertical: 24.0)
+                : const EdgeInsets.symmetric(horizontal: 24.0),
+            child: ClipPath(
+              clipper: widget.isVertical
+                  ? RectClipperVertical(_clipFactor)
+                  : RectClipper(_clipFactor),
+              child: SizedImage(
+                widget.beforeImage,
+                widget.imageHeight,
+                widget.imageWidth,
+                widget.imageCornerRadius,
+              ),
             ),
-            child: widget.isVertical
-                ? RotatedBox(
-                    quarterTurns: 1,
-                    child: Slider(
-                      value: _clipFactor,
-                      onChanged: (double factor) =>
-                          setState(() => this._clipFactor = factor),
-                    ),
-                  )
-                : Slider(
-                    value: _clipFactor,
-                    onChanged: (double factor) =>
-                        setState(() => this._clipFactor = factor),
-                  ),
           ),
-        ),
-      ],
+          Positioned.fill(
+            child: SliderTheme(
+              data: SliderThemeData(
+                trackHeight: 0.0,
+                overlayColor: widget.overlayColor,
+                thumbShape: CustomThumbShape(
+                    widget.thumbRadius, widget.thumbColor, widget.thumbWidth),
+              ),
+              child: widget.isVertical
+                  ? RotatedBox(
+                      quarterTurns: 1,
+                      child: Slider(
+                        value: _clipFactor,
+                        onChanged: (double factor) {
+                          setState(() => this._clipFactor = factor);
+                          if (widget.onChanged != null) {
+                            widget.onChanged!(factor);
+                          }
+                        },
+                      ),
+                    )
+                  : Slider(
+                      value: _clipFactor,
+                      onChanged: (double factor) {
+                        setState(() => this._clipFactor = factor);
+                        if (widget.onChanged != null) {
+                          widget.onChanged!(factor);
+                        }
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -118,8 +141,9 @@ class SizedImage extends StatelessWidget {
 class CustomThumbShape extends SliderComponentShape {
   final double _thumbRadius;
   final Color _thumbColor;
+  final double _thumbStrokeWidth;
 
-  CustomThumbShape(this._thumbRadius, this._thumbColor);
+  CustomThumbShape(this._thumbRadius, this._thumbColor, this._thumbStrokeWidth);
 
   @override
   Size getPreferredSize(bool isEnabled, bool isDiscrete) {
@@ -142,13 +166,13 @@ class CustomThumbShape extends SliderComponentShape {
 
     final Paint paint = Paint()
       ..isAntiAlias = true
-      ..strokeWidth = 4.0
+      ..strokeWidth = _thumbStrokeWidth
       ..color = _thumbColor
       ..style = PaintingStyle.fill;
 
     final Paint paintStroke = Paint()
       ..isAntiAlias = true
-      ..strokeWidth = 4.0
+      ..strokeWidth = _thumbStrokeWidth
       ..color = _thumbColor
       ..style = PaintingStyle.stroke;
 
@@ -160,13 +184,15 @@ class CustomThumbShape extends SliderComponentShape {
 
     canvas.drawCircle(
       center,
-      _thumbRadius - 6,
+      _thumbRadius,
       paint,
     );
 
     canvas.drawRect(
         Rect.fromCenter(
-            center: center, width: 4.0, height: parentBox.size.height),
+            center: center,
+            width: _thumbStrokeWidth,
+            height: parentBox.size.height),
         paint);
   }
 }

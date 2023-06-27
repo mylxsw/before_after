@@ -46,60 +46,48 @@ class _BeforeAfterState extends State<BeforeAfter> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.red)),
-      child: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Padding(
-            padding: widget.isVertical
-                ? const EdgeInsets.symmetric(vertical: 24.0)
-                : const EdgeInsets.symmetric(horizontal: 24.0),
+    return Stack(
+      alignment: Alignment.center,
+      children: <Widget>[
+        Padding(
+          padding: widget.isVertical
+              ? const EdgeInsets.symmetric(vertical: 24.0)
+              : const EdgeInsets.symmetric(horizontal: 24.0),
+          child: SizedImage(
+            widget.afterImage,
+            widget.imageHeight,
+            widget.imageWidth,
+            widget.imageCornerRadius,
+          ),
+        ),
+        Padding(
+          padding: widget.isVertical
+              ? const EdgeInsets.symmetric(vertical: 24.0)
+              : const EdgeInsets.symmetric(horizontal: 24.0),
+          child: ClipPath(
+            clipper: widget.isVertical
+                ? RectClipperVertical(_clipFactor)
+                : RectClipper(_clipFactor),
             child: SizedImage(
-              widget.afterImage,
+              widget.beforeImage,
               widget.imageHeight,
               widget.imageWidth,
               widget.imageCornerRadius,
             ),
           ),
-          Padding(
-            padding: widget.isVertical
-                ? const EdgeInsets.symmetric(vertical: 24.0)
-                : const EdgeInsets.symmetric(horizontal: 24.0),
-            child: ClipPath(
-              clipper: widget.isVertical
-                  ? RectClipperVertical(_clipFactor)
-                  : RectClipper(_clipFactor),
-              child: SizedImage(
-                widget.beforeImage,
-                widget.imageHeight,
-                widget.imageWidth,
-                widget.imageCornerRadius,
-              ),
+        ),
+        Positioned.fill(
+          child: SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 0.0,
+              overlayColor: widget.overlayColor,
+              thumbShape: CustomThumbShape(
+                  widget.thumbRadius, widget.thumbColor, widget.thumbWidth),
             ),
-          ),
-          Positioned.fill(
-            child: SliderTheme(
-              data: SliderThemeData(
-                trackHeight: 0.0,
-                overlayColor: widget.overlayColor,
-                thumbShape: CustomThumbShape(
-                    widget.thumbRadius, widget.thumbColor, widget.thumbWidth),
-              ),
-              child: widget.isVertical
-                  ? RotatedBox(
-                      quarterTurns: 1,
-                      child: Slider(
-                        value: _clipFactor,
-                        onChanged: (double factor) {
-                          setState(() => this._clipFactor = factor);
-                          if (widget.onChanged != null) {
-                            widget.onChanged!(factor);
-                          }
-                        },
-                      ),
-                    )
-                  : Slider(
+            child: widget.isVertical
+                ? RotatedBox(
+                    quarterTurns: 1,
+                    child: Slider(
                       value: _clipFactor,
                       onChanged: (double factor) {
                         setState(() => this._clipFactor = factor);
@@ -108,10 +96,19 @@ class _BeforeAfterState extends State<BeforeAfter> {
                         }
                       },
                     ),
-            ),
+                  )
+                : Slider(
+                    value: _clipFactor,
+                    onChanged: (double factor) {
+                      setState(() => this._clipFactor = factor);
+                      if (widget.onChanged != null) {
+                        widget.onChanged!(factor);
+                      }
+                    },
+                  ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

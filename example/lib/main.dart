@@ -38,7 +38,8 @@ class MyHomePage extends StatelessWidget {
               child: BeforeAfter(
                 beforeImage: Image.asset('assets/after.jpg'),
                 afterImage: Image.asset('assets/before.jpg'),
-                thumbWidth: 3,
+                thumbWidth: 1,
+                thumbRadius: 5,
               ),
             ),
             Expanded(
